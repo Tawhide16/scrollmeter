@@ -1,0 +1,6 @@
+{
+  "name": "ScrollMeter - Short-form Video Tracker",
+  "description": "Privacy-conscious browser extension and dashboard to track short-form video consumption across YouTube Shorts, Instagram Reels, TikTok, and Facebook Reels.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
