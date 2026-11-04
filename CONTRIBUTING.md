@@ -45,3 +45,4 @@ Thank you for your interest in contributing to ScrollMeter! We welcome contribut
 - Maintain privacy-first principles: no user tracking, telemetry, or remote transmission of personal browsing logs.
 - Use TypeScript with strict typings wherever possible.
 - Style UI components with Tailwind CSS.
+

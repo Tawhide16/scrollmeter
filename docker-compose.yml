@@ -16,3 +16,4 @@ services:
       start_period: 5s
     environment:
       - NODE_ENV=production
+
