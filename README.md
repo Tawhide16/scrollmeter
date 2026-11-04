@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="./assets/scrollmeter-preview.jpg" alt="ScrollMeter Dashboard and Extension Preview" width="100%" />
+</div>
+
 # 📱 ScrollMeter
 
 > **Privacy-conscious short-form video tracking, analytics dashboard, and browser extension generator for YouTube Shorts, Instagram Reels, TikTok, and Facebook Reels.**
@@ -242,3 +246,4 @@ Please check out [CONTRIBUTING.md](CONTRIBUTING.md) for details on getting start
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
+
