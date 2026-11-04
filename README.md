@@ -1,7 +1,3 @@
-<div align="center">
-  <img src="./assets/scrollmeter-preview.jpg" alt="ScrollMeter Dashboard and Extension Preview" width="100%" />
-</div>
-
 # 📱 ScrollMeter
 
 > **Privacy-conscious short-form video tracking, analytics dashboard, and browser extension generator for YouTube Shorts, Instagram Reels, TikTok, and Facebook Reels.**
@@ -16,6 +12,12 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ---
+
+<div align="center">
+  <img src="./assets/scrollmeter-preview.jpg" alt="ScrollMeter Dashboard and Extension Preview" width="100%" />
+</div>
+
+<br />
 
 ## 🌟 Overview
 
