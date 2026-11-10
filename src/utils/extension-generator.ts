@@ -514,6 +514,30 @@ async function scheduleDailyReport(timeString = '21:00') {
     }
   }, 400);
 
+  // Debounced playback observer on DOM mutations and scroll events
+  let debounceTimeout = null;
+  function debouncedObserve() {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(observePlayback, 250);
+  }
+
+  window.addEventListener('scroll', debouncedObserve, { passive: true });
+  window.addEventListener('wheel', debouncedObserve, { passive: true });
+
+  const domObserver = new MutationObserver(() => {
+    if (isShortsOrReelsUrl()) {
+      debouncedObserve();
+    }
+  });
+
+  if (document.body) {
+    domObserver.observe(document.body, { childList: true, subtree: true });
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (document.body) domObserver.observe(document.body, { childList: true, subtree: true });
+    });
+  }
+
   // Periodic active video check
   setInterval(observePlayback, 1000);
 
