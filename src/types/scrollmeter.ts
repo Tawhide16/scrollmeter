@@ -121,3 +121,21 @@ export interface TimeframeAnalytics {
   trendVsPreviousPercent: number;
 }
 
+export interface WellbeingMilestone {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  unlocked: boolean;
+  progressPercent: number;
+}
+
+export interface WellbeingStreakSummary {
+  currentStreakDays: number;
+  longestStreakDays: number;
+  totalDaysMonitored: number;
+  mindfulDaysCount: number;
+  milestones: WellbeingMilestone[];
+}
+
+

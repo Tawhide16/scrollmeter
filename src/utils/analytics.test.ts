@@ -8,6 +8,7 @@ import {
   formatDuration, 
   formatHoursAndMinutes,
   getTimeframeAnalytics,
+  calculateWellbeingStreaks,
   toDateKey 
 } from './analytics';
 import { ViewingEvent } from '../types/scrollmeter';
@@ -148,5 +149,33 @@ test('getTimeframeAnalytics correctly computes hours lost and averages across da
   assert.equal(monthAnalytics.totalSeconds, 9000);
   assert.equal(monthAnalytics.totalHours, 2.5);
   assert.equal(monthAnalytics.platformBreakdown.length, 4);
+});
+
+test('calculateWellbeingStreaks accurately evaluates current streaks and milestone completion', () => {
+  const refDate = new Date();
+  const now = refDate.getTime();
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  const events: ViewingEvent[] = [
+    // Today: 600s
+    createViewingEvent({ platform: 'youtube', contentId: 's1', creatorName: 'CreatorA', startedAt: now, watchSeconds: 600 }),
+    // Yesterday: 900s
+    createViewingEvent({ platform: 'instagram', contentId: 's2', creatorName: 'CreatorB', startedAt: now - 1 * dayMs, watchSeconds: 900 }),
+    // 2 days ago: 1200s
+    createViewingEvent({ platform: 'tiktok', contentId: 's3', creatorName: 'CreatorC', startedAt: now - 2 * dayMs, watchSeconds: 1200 }),
+  ];
+
+  const streaks = calculateWellbeingStreaks(events, refDate, 1800);
+  assert.equal(streaks.currentStreakDays, 3);
+  assert.equal(streaks.longestStreakDays, 3);
+  assert.equal(streaks.mindfulDaysCount, 3);
+  assert.equal(streaks.totalDaysMonitored, 3);
+
+  // Check milestones
+  const firstStep = streaks.milestones.find((m) => m.id === 'first-step');
+  assert.equal(firstStep?.unlocked, true);
+
+  const mindfulStarter = streaks.milestones.find((m) => m.id === 'mindful-starter');
+  assert.equal(mindfulStarter?.unlocked, true);
 });
 

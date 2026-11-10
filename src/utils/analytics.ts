@@ -5,7 +5,9 @@ import {
   CreatorSummary, 
   WeeklyTrendDay,
   TimeframeAnalytics,
-  PlatformTimeBreakdown 
+  PlatformTimeBreakdown,
+  WellbeingMilestone,
+  WellbeingStreakSummary
 } from '../types/scrollmeter';
 
 /**
@@ -489,6 +491,115 @@ export function getTimeframeAnalytics(
     weeklyDays,
     monthlyWeeks,
     trendVsPreviousPercent,
+  };
+}
+
+/**
+ * Computes wellbeing streak metrics and unlocked milestone badges
+ */
+export function calculateWellbeingStreaks(
+  events: ViewingEvent[],
+  refDate: Date = new Date(),
+  dailyGoalSeconds: number = 1800 // default 30 min limit
+): WellbeingStreakSummary {
+  const dayMap = new Map<string, number>();
+
+  for (const e of events) {
+    const k = toDateKey(e.startedAt);
+    dayMap.set(k, (dayMap.get(k) || 0) + (e.watchSeconds || 0));
+  }
+
+  const sortedDates = Array.from(dayMap.keys()).sort();
+  const totalDaysMonitored = sortedDates.length;
+
+  let mindfulDaysCount = 0;
+  for (const [, secs] of dayMap.entries()) {
+    if (secs <= dailyGoalSeconds) {
+      mindfulDaysCount++;
+    }
+  }
+
+  let currentStreakDays = 0;
+  let checkDate = new Date(refDate);
+
+  const todayKey = toDateKey(checkDate);
+  if (!dayMap.has(todayKey)) {
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+
+  while (dayMap.has(toDateKey(checkDate))) {
+    currentStreakDays++;
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+
+  let longestStreakDays = 0;
+  let tempStreak = 0;
+  let prevDate: Date | null = null;
+
+  for (const dateStr of sortedDates) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const currentDate = new Date(y, m - 1, d);
+
+    if (prevDate) {
+      const diffDays = Math.round((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        tempStreak++;
+      } else {
+        tempStreak = 1;
+      }
+    } else {
+      tempStreak = 1;
+    }
+
+    if (tempStreak > longestStreakDays) {
+      longestStreakDays = tempStreak;
+    }
+    prevDate = currentDate;
+  }
+
+  longestStreakDays = Math.max(longestStreakDays, currentStreakDays);
+
+  const milestones: WellbeingMilestone[] = [
+    {
+      id: 'first-step',
+      title: 'First Step',
+      description: 'Logged your first monitored short-form session',
+      icon: 'Footprints',
+      unlocked: totalDaysMonitored >= 1,
+      progressPercent: Math.min(100, Math.round((totalDaysMonitored / 1) * 100)),
+    },
+    {
+      id: 'mindful-starter',
+      title: 'Mindful Starter',
+      description: '3 days keeping scroll time under 30 minutes',
+      icon: 'HeartHandshake',
+      unlocked: mindfulDaysCount >= 3,
+      progressPercent: Math.min(100, Math.round((mindfulDaysCount / 3) * 100)),
+    },
+    {
+      id: 'habit-builder',
+      title: 'Habit Builder',
+      description: 'Maintained a 7-day tracking streak',
+      icon: 'Flame',
+      unlocked: longestStreakDays >= 7,
+      progressPercent: Math.min(100, Math.round((longestStreakDays / 7) * 100)),
+    },
+    {
+      id: 'zen-master',
+      title: 'Zen Master',
+      description: 'Accumulated 10 mindful days under daily goal',
+      icon: 'Sparkles',
+      unlocked: mindfulDaysCount >= 10,
+      progressPercent: Math.min(100, Math.round((mindfulDaysCount / 10) * 100)),
+    },
+  ];
+
+  return {
+    currentStreakDays,
+    longestStreakDays,
+    totalDaysMonitored,
+    mindfulDaysCount,
+    milestones,
   };
 }
 
