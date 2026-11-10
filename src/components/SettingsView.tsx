@@ -9,6 +9,8 @@ import {
   purgeDataOlderThanDays,
   purgeDataForPlatform
 } from '../utils/storage';
+import { generateMarkdownReport, triggerFileDownload } from '../utils/export-helpers';
+import { buildDailySummary } from '../utils/analytics';
 import { 
   encryptData, 
   decryptData, 
@@ -134,6 +136,15 @@ export function SettingsView({
     a.click();
     URL.revokeObjectURL(url);
     showFeedback('Exported CSV successfully!');
+  };
+
+  // Export Markdown Wellbeing Report
+  const handleExportMarkdown = () => {
+    const summary = buildDailySummary(events);
+    const md = generateMarkdownReport(events, summary);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    triggerFileDownload(`scrollmeter-report-${dateStr}.md`, md, 'text/markdown;charset=utf-8');
+    showFeedback('Exported Markdown report successfully!');
   };
 
   // Import JSON Backup
@@ -719,6 +730,13 @@ export function SettingsView({
                   >
                     <FileText className="w-3.5 h-3.5 text-[#72f534]" />
                     Export CSV
+                  </button>
+                  <button
+                    onClick={handleExportMarkdown}
+                    className="col-span-2 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-[#203123] hover:bg-[#283e2c] border border-[#2e4732] rounded-xl text-xs text-white font-medium transition-colors cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-[#72f534]" />
+                    Export Markdown Report
                   </button>
                 </div>
 
