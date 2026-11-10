@@ -20,8 +20,13 @@ export interface EncryptedPayload {
 const SENTINEL_PHRASE = 'SCROLLMETER_SECURE_AUTH_SENTINEL_V1';
 const PBKDF2_ITERATIONS = 100000;
 
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
+function arrayBufferToBase64(buffer: ArrayBuffer | ArrayBufferView): string {
+  const bytes =
+    buffer instanceof Uint8Array
+      ? buffer
+      : 'buffer' in buffer
+      ? new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
+      : new Uint8Array(buffer);
   let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
@@ -57,7 +62,7 @@ export async function deriveKeyFromPassphrase(
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: saltBuffer,
+      salt: saltBuffer as unknown as BufferSource,
       iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256',
     },

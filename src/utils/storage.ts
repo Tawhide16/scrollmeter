@@ -9,6 +9,8 @@ import {
 } from './indexed-db';
 import { encryptData, decryptData, EncryptedPayload } from './crypto';
 
+declare const chrome: any;
+
 const STORAGE_KEY_SETTINGS = 'scrollmeter_settings_v3';
 const STORAGE_KEY_EVENTS_CACHE = 'scrollmeter_events_cache_v3';
 const STORAGE_KEY_CRYPTO_VERIFICATION = 'scrollmeter_crypto_verification_v3';
@@ -45,7 +47,7 @@ export function loadStoredSettings(): UserSettings {
 export async function loadSettingsFromChromeStorage(): Promise<UserSettings> {
   if (hasChromeStorageLocal()) {
     return new Promise((resolve) => {
-      chrome.storage.local.get([STORAGE_KEY_SETTINGS], (result) => {
+      chrome.storage.local.get([STORAGE_KEY_SETTINGS], (result: any) => {
         if (result && result[STORAGE_KEY_SETTINGS]) {
           resolve({ ...DEFAULT_USER_SETTINGS, ...result[STORAGE_KEY_SETTINGS] });
         } else {
