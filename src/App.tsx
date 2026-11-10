@@ -14,7 +14,8 @@ import {
 } from './utils/storage';
 import { 
   buildDailySummary, 
-  toDateKey 
+  toDateKey,
+  calculateWellbeingStreaks 
 } from './utils/analytics';
 import { createViewingEvent, isDuplicateEvent } from './utils/event-normaliser';
 import { generateSeedEvents } from './utils/mock-data';
@@ -26,6 +27,7 @@ import { FeedSimulator } from './components/FeedSimulator';
 import { ExtensionPackagerModal } from './components/ExtensionPackagerModal';
 import { LaunchGuideModal } from './components/LaunchGuideModal';
 import { NotificationToast } from './components/NotificationToast';
+import { AchievementCard } from './components/AchievementCard';
 import { ScrollMeterLogo, PlatformIcon } from './components/PlatformIcons';
 import { downloadExtensionZip } from './utils/extension-generator';
 import { 
@@ -61,6 +63,8 @@ export default function App() {
   const [isLaunchGuideOpen, setIsLaunchGuideOpen] = useState(false);
   const [activeNotification, setActiveNotification] = useState(false);
   const [viewMode, setViewMode] = useState<'browser' | 'popup-only'>('browser');
+
+  const streakSummary = calculateWellbeingStreaks(events);
 
   // Load from Local-First IndexedDB on initial mount
   useEffect(() => {
@@ -466,8 +470,8 @@ export default function App() {
 
             {/* Browser Body Area */}
             <div className="flex-1 flex overflow-hidden relative bg-[#0f0f0f]">
-              {/* Left YouTube Navigation Drawer */}
-              <div className="w-56 border-r border-white/5 p-3 hidden md:flex flex-col space-y-4 text-xs text-slate-300 bg-[#0f0f0f] select-none">
+              {/* Left YouTube Navigation Drawer & Wellbeing Hub */}
+              <div className="w-64 border-r border-white/5 p-3 hidden md:flex flex-col space-y-4 text-xs text-slate-300 bg-[#0f0f0f] select-none overflow-y-auto">
                 <div className="space-y-1">
                   <div className="flex items-center gap-4 px-3 py-2 rounded-xl text-slate-400 hover:bg-white/5">
                     <Home className="w-4 h-4" />
@@ -483,7 +487,12 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-white/5 space-y-1">
+                {/* Wellbeing Streaks & Badges */}
+                <div>
+                  <AchievementCard streakSummary={streakSummary} />
+                </div>
+
+                <div className="pt-2 border-t border-white/5 space-y-1">
                   <span className="px-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     You &gt;
                   </span>
