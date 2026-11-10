@@ -47,7 +47,10 @@ Modern social feeds are engineered for friction-free endless scrolling. ScrollMe
   - Adjustable watch threshold (e.g. minimum 2 seconds before counting a view).
   - In-page floating counter position and visibility toggle.
   - Automated data retention policy (7, 30, 90 days, or permanent).
-  - Full JSON / CSV export and import.
+  - Full JSON, CSV, and formatted Markdown report export.
+- 🏆 **Mindful Streaks & Wellbeing Milestones**:
+  - Daily progress tracking against configurable mindful thresholds.
+  - Interactive achievement badges (First Step, Mindful Starter, Habit Builder, Zen Master).
 - 🐳 **Docker & Container Ready**:
   - Production-ready multi-stage Docker build served with high-performance Nginx and Gzip compression.
 
@@ -108,12 +111,22 @@ flowchart TD
    npm install --legacy-peer-deps
    ```
 
-3. **Start the development server**:
+3. **Run automated unit tests**:
+   ```bash
+   npm test
+   ```
+
+4. **Verify types & code style**:
+   ```bash
+   npm run lint
+   ```
+
+5. **Start the development server**:
    ```bash
    npm run dev
    ```
 
-4. **Open in browser**:
+6. **Open in browser**:
    Navigate to [http://localhost:3000](http://localhost:3000).
 
 ---
