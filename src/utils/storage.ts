@@ -6,7 +6,9 @@ import {
   clearAllEventsFromIndexedDB,
   purgeEventsOlderThan,
   purgeEventsByPlatform,
+  bulkAddEventsToIndexedDB,
 } from './indexed-db';
+export { bulkAddEventsToIndexedDB };
 import { encryptData, decryptData, EncryptedPayload } from './crypto';
 
 declare const chrome: any;

@@ -293,3 +293,40 @@ export async function loadCryptoMetaFromIndexedDB<T>(key: string): Promise<T | n
     return null;
   }
 }
+
+/**
+ * High-throughput batch insertion for viewing events in chunks
+ */
+export async function bulkAddEventsToIndexedDB(
+  newEvents: ViewingEvent[],
+  chunkSize: number = 250
+): Promise<number> {
+  if (!newEvents || newEvents.length === 0) return 0;
+  try {
+    const db = await openLocalDatabase();
+    let totalInserted = 0;
+
+    for (let i = 0; i < newEvents.length; i += chunkSize) {
+      const chunk = newEvents.slice(i, i + chunkSize);
+      await new Promise<void>((resolve, reject) => {
+        const transaction = db.transaction([STORE_EVENTS], 'readwrite');
+        const store = transaction.objectStore(STORE_EVENTS);
+
+        for (const ev of chunk) {
+          store.put(ev);
+        }
+
+        transaction.oncomplete = () => {
+          totalInserted += chunk.length;
+          resolve();
+        };
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }
+
+    return totalInserted;
+  } catch (err) {
+    console.error('Error during bulk insertion to IndexedDB:', err);
+    return 0;
+  }
+}
