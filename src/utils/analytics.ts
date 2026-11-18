@@ -12,15 +12,30 @@ import {
   DiversityMetrics
 } from '../types/scrollmeter';
 
+const dateKeyCache = new Map<number, string>();
+const MAX_DATE_KEY_CACHE = 1000;
+
 /**
- * Normalises a date to 'YYYY-MM-DD'
+ * Normalises a date to 'YYYY-MM-DD' with caching for numeric timestamps
  */
 export function toDateKey(date: Date | number): string {
+  if (typeof date === 'number') {
+    const cached = dateKeyCache.get(date);
+    if (cached) return cached;
+  }
   const d = typeof date === 'number' ? new Date(date) : date;
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const result = `${year}-${month}-${day}`;
+
+  if (typeof date === 'number') {
+    if (dateKeyCache.size >= MAX_DATE_KEY_CACHE) {
+      dateKeyCache.clear();
+    }
+    dateKeyCache.set(date, result);
+  }
+  return result;
 }
 
 /**
@@ -400,6 +415,18 @@ export function getTimeframeAnalytics(
     const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     weeklyDays = [];
 
+    // Pre-index events by day to avoid O(N * 7) scanning
+    const eventsByDay = new Map<string, ViewingEvent[]>();
+    for (const e of events) {
+      const key = toDateKey(e.startedAt);
+      const list = eventsByDay.get(key);
+      if (list) {
+        list.push(e);
+      } else {
+        eventsByDay.set(key, [e]);
+      }
+    }
+
     let maxDayCount = -1;
     let minDayCount = Infinity;
     let peakDayIdx = 0;
@@ -410,7 +437,7 @@ export function getTimeframeAnalytics(
       d.setDate(monday.getDate() + i);
       const k = toDateKey(d);
 
-      const dayEvents = events.filter((e) => toDateKey(e.startedAt) === k);
+      const dayEvents = eventsByDay.get(k) || [];
       const daySecs = dayEvents.reduce((acc, e) => acc + (e.watchSeconds || 0), 0);
       const dayCount = dayEvents.length;
 
