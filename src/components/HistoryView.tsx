@@ -5,7 +5,8 @@ import {
   filterEvents, 
   formatDuration, 
   toDateKey,
-  getTimeframeAnalytics 
+  getTimeframeAnalytics,
+  getHourlyDistribution 
 } from '../utils/analytics';
 import { PlatformIcon } from './PlatformIcons';
 import { PlatformTabs } from './PlatformTabs';
@@ -53,6 +54,7 @@ export function HistoryView({
 
   // Compute rich attention & time lost analytics for the selected timeframe
   const analytics = getTimeframeAnalytics(events, timeframe);
+  const hourlyActivity = getHourlyDistribution(events);
 
   // Filter events for the chronological log view
   const filteredEvents = filterEvents(events, {
@@ -452,6 +454,54 @@ export function HistoryView({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Card 5: Hourly Consumption Heatmap */}
+          <div className="bg-[#172219] border border-[#263728] rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#72f534]" />
+                Hourly Activity & Doomscrolling Heatmap
+              </span>
+              <span className="text-[10px] text-slate-400">24h cycle</span>
+            </div>
+
+            <div className="grid grid-cols-12 gap-1 pt-1">
+              {hourlyActivity.map((h) => (
+                <div key={h.hour} className="flex flex-col items-center group relative">
+                  <div
+                    className={`w-full h-8 rounded-md transition-all cursor-pointer ${
+                      h.count === 0
+                        ? 'bg-[#111812] border border-white/5 opacity-40'
+                        : h.percentage > 15
+                        ? 'bg-[#72f534] shadow-sm'
+                        : h.percentage > 7
+                        ? 'bg-emerald-500/80'
+                        : 'bg-emerald-900/60'
+                    }`}
+                  />
+                  <span className="text-[8px] font-mono text-slate-500 mt-1">
+                    {h.hour % 6 === 0 ? `${h.hour}h` : ''}
+                  </span>
+                  {/* Tooltip on hover */}
+                  <div className="absolute bottom-10 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
+                    <div className="bg-[#0b0f0c] border border-[#233125] text-white text-[10px] py-1 px-2 rounded-lg whitespace-nowrap shadow-xl">
+                      <span className="font-bold text-[#72f534]">{h.label}</span>: {h.count} reels ({h.percentage}%)
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-white/5">
+              <span>Low (0%)</span>
+              <div className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#111812] border border-white/5 opacity-40" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-900/60" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500/80" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#72f534]" />
+              </div>
+              <span>Peak (&gt;15%)</span>
             </div>
           </div>
 
