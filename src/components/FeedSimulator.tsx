@@ -183,6 +183,8 @@ export function FeedSimulator({
   const [videoIndex, setVideoIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [playbackSeconds, setPlaybackSeconds] = useState(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState<1 | 2 | 4>(1);
+  const [autoScroll, setAutoScroll] = useState(false);
   const [hasRecordedCurrent, setHasRecordedCurrent] = useState(false);
   const [inPageDismissed, setInPageDismissed] = useState(false);
 
@@ -195,7 +197,7 @@ export function FeedSimulator({
     if (isPlaying) {
       interval = setInterval(() => {
         setPlaybackSeconds((prev) => {
-          const next = prev + 0.5;
+          const next = prev + 0.5 * playbackSpeed;
           if (next >= currentShort.durationSeconds) {
             return 0;
           }
@@ -207,7 +209,17 @@ export function FeedSimulator({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isPlaying, currentShort.durationSeconds]);
+  }, [isPlaying, currentShort.durationSeconds, playbackSpeed]);
+
+  // Handle auto-scroll advance when reel has passed viewing threshold
+  useEffect(() => {
+    if (autoScroll && hasRecordedCurrent && playbackSeconds >= settings.viewThresholdSeconds + 1.5) {
+      const timer = setTimeout(() => {
+        handleNextVideo();
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [autoScroll, hasRecordedCurrent, playbackSeconds, settings.viewThresholdSeconds]);
 
   // Effect to trigger view event once threshold is reached
   useEffect(() => {
@@ -458,14 +470,44 @@ export function FeedSimulator({
 
         <button
           onClick={handleNextVideo}
-          className="px-3 py-1 rounded-lg bg-[#72f534] hover:bg-[#86ff4d] text-black font-semibold flex items-center gap-1"
+          className="px-3 py-1 rounded-lg bg-[#72f534] hover:bg-[#86ff4d] text-black font-semibold flex items-center gap-1 cursor-pointer"
         >
           <span>Next Video</span>
           <ChevronDown className="w-3.5 h-3.5" />
         </button>
 
-        <span className="text-[11px] text-slate-400 pl-2">
-          Video {videoIndex + 1} of {playlist.length}
+        {/* Speed Multipliers */}
+        <div className="flex items-center gap-1 bg-[#101511] p-0.5 rounded-lg border border-white/5 ml-1">
+          {([1, 2, 4] as const).map((spd) => (
+            <button
+              key={spd}
+              onClick={() => setPlaybackSpeed(spd)}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors cursor-pointer ${
+                playbackSpeed === spd
+                  ? 'bg-[#72f534] text-black font-bold'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {spd}x
+            </button>
+          ))}
+        </div>
+
+        {/* Auto Scroll Toggle */}
+        <button
+          onClick={() => setAutoScroll(!autoScroll)}
+          className={`px-2 py-1 rounded-lg text-[11px] font-medium border transition-colors cursor-pointer ${
+            autoScroll
+              ? 'bg-[#18231a] text-[#72f534] border-[#2b3d2d]'
+              : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
+          }`}
+          title="Auto-scroll to next reel after view is logged"
+        >
+          Auto-scroll: {autoScroll ? 'ON' : 'OFF'}
+        </button>
+
+        <span className="text-[11px] text-slate-400 pl-1">
+          {videoIndex + 1}/{playlist.length}
         </span>
       </div>
     </div>
