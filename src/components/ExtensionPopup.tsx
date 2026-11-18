@@ -152,6 +152,35 @@ export function ExtensionPopup({
           </div>
         </div>
 
+        {/* Daily Mindful Limit Progress Bar */}
+        {(() => {
+          const limitMins = settings.dailyLimitMinutes || 30;
+          const watchedMins = Math.round(summary.estimatedSeconds / 60);
+          const pct = Math.min(100, Math.round((watchedMins / limitMins) * 100));
+          const isOver = watchedMins >= limitMins;
+          const isWarning = pct >= 75 && !isOver;
+
+          return (
+            <div className="bg-[#172219] border border-[#263728] rounded-xl px-3.5 py-2.5 space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${isOver ? 'bg-rose-500 animate-pulse' : isWarning ? 'bg-amber-400' : 'bg-[#72f534]'}`} />
+                  Daily Limit: <span className="text-white font-bold">{watchedMins} / {limitMins}m</span>
+                </span>
+                <span className={`text-[11px] font-semibold ${isOver ? 'text-rose-400' : isWarning ? 'text-amber-400' : 'text-[#72f534]'}`}>
+                  {isOver ? 'Limit Exceeded' : `${pct}% used`}
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-[#101511] rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${isOver ? 'bg-rose-500' : isWarning ? 'bg-amber-400' : 'bg-[#72f534]'}`}
+                  style={{ width: `${Math.max(4, pct)}%` }}
+                />
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Platform Breakdown 2x2 Grid */}
         <div className="grid grid-cols-2 gap-2.5">
           {/* YouTube Shorts */}
