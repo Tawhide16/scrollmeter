@@ -463,6 +463,44 @@ export function SettingsView({
                 </div>
               </div>
 
+              {/* Daily Mindful Limit Alert */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Daily Mindful Watch Limit
+                  </span>
+                  <span className="text-xs font-bold text-[#72f534]">
+                    {settings.dailyLimitMinutes || 30} minutes
+                  </span>
+                </div>
+
+                <div className="bg-[#172219] p-3.5 rounded-2xl border border-[#263728] space-y-2">
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    Set your personal daily goal. You'll receive a notification and in-page alert when exceeded.
+                  </p>
+                  <input
+                    type="range"
+                    min="10"
+                    max="120"
+                    step="5"
+                    value={settings.dailyLimitMinutes || 30}
+                    onChange={(e) =>
+                      onUpdateSettings({
+                        ...settings,
+                        dailyLimitMinutes: parseInt(e.target.value, 10),
+                      })
+                    }
+                    className="w-full accent-[#72f534] cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                    <span>10m</span>
+                    <span>30m (Target)</span>
+                    <span>60m</span>
+                    <span>120m</span>
+                  </div>
+                </div>
+              </div>
+
               {/* 3. In-page Floating Pill */}
               <div className="space-y-2.5">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">

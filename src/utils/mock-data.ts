@@ -9,6 +9,7 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
     facebook: true,
   },
   viewThresholdSeconds: 2,
+  dailyLimitMinutes: 30,
   dailyReportEnabled: true,
   dailyReportTime: '21:00', // 9:00 PM
   inPageIndicatorEnabled: true,

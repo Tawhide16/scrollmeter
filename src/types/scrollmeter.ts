@@ -20,6 +20,7 @@ export interface UserSettings {
   trackingPaused: boolean;
   enabledPlatforms: Record<Platform, boolean>;
   viewThresholdSeconds: number; // default: 2
+  dailyLimitMinutes?: number; // default: 30
   dailyReportEnabled: boolean;
   dailyReportTime: string; // "21:00"
   inPageIndicatorEnabled: boolean;
