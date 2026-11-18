@@ -138,4 +138,13 @@ export interface WellbeingStreakSummary {
   milestones: WellbeingMilestone[];
 }
 
+export interface HourlyActivityPoint {
+  hour: number;
+  label: string;
+  count: number;
+  seconds: number;
+  percentage: number;
+}
+
+
 

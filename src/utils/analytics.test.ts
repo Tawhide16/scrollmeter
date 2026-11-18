@@ -9,6 +9,7 @@ import {
   formatHoursAndMinutes,
   getTimeframeAnalytics,
   calculateWellbeingStreaks,
+  getHourlyDistribution,
   toDateKey 
 } from './analytics';
 import { ViewingEvent } from '../types/scrollmeter';
@@ -178,4 +179,31 @@ test('calculateWellbeingStreaks accurately evaluates current streaks and milesto
   const mindfulStarter = streaks.milestones.find((m) => m.id === 'mindful-starter');
   assert.equal(mindfulStarter?.unlocked, true);
 });
+
+test('getHourlyDistribution returns 24 bins and properly aggregates activity', () => {
+  const d = new Date();
+  d.setHours(14, 30, 0, 0); // 2:30 PM
+  const time14 = d.getTime();
+
+  d.setHours(20, 15, 0, 0); // 8:15 PM
+  const time20 = d.getTime();
+
+  const events: ViewingEvent[] = [
+    createViewingEvent({ platform: 'youtube', contentId: 'h1', creatorName: 'A', startedAt: time14, watchSeconds: 100 }),
+    createViewingEvent({ platform: 'youtube', contentId: 'h2', creatorName: 'B', startedAt: time14, watchSeconds: 300 }),
+    createViewingEvent({ platform: 'tiktok', contentId: 'h3', creatorName: 'C', startedAt: time20, watchSeconds: 400 }),
+  ];
+
+  const hourly = getHourlyDistribution(events);
+  assert.equal(hourly.length, 24);
+  assert.equal(hourly[14].count, 2);
+  assert.equal(hourly[14].seconds, 400);
+  assert.equal(hourly[14].label, '2 PM');
+  assert.equal(hourly[20].count, 1);
+  assert.equal(hourly[20].seconds, 400);
+  assert.equal(hourly[20].label, '8 PM');
+  assert.equal(hourly[14].percentage, 50);
+  assert.equal(hourly[20].percentage, 50);
+});
+
 

@@ -7,7 +7,8 @@ import {
   TimeframeAnalytics,
   PlatformTimeBreakdown,
   WellbeingMilestone,
-  WellbeingStreakSummary
+  WellbeingStreakSummary,
+  HourlyActivityPoint
 } from '../types/scrollmeter';
 
 /**
@@ -602,4 +603,37 @@ export function calculateWellbeingStreaks(
     milestones,
   };
 }
+
+/**
+ * Calculates distribution of viewing events across 24 hours of the day
+ */
+export function getHourlyDistribution(events: ViewingEvent[]): HourlyActivityPoint[] {
+  const totalSeconds = events.reduce((acc, e) => acc + (e.watchSeconds || 0), 0);
+  const hoursMap = Array.from({ length: 24 }, () => ({ count: 0, seconds: 0 }));
+
+  for (const e of events) {
+    const d = new Date(e.startedAt);
+    const hour = d.getHours();
+    if (hour >= 0 && hour < 24) {
+      hoursMap[hour].count++;
+      hoursMap[hour].seconds += e.watchSeconds || 0;
+    }
+  }
+
+  return hoursMap.map((data, hour) => {
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+    const label = `${displayHour} ${period}`;
+    const percentage = totalSeconds > 0 ? Number(((data.seconds / totalSeconds) * 100).toFixed(1)) : 0;
+
+    return {
+      hour,
+      label,
+      count: data.count,
+      seconds: data.seconds,
+      percentage,
+    };
+  });
+}
+
 
