@@ -10,6 +10,7 @@ import {
   getTimeframeAnalytics,
   calculateWellbeingStreaks,
   getHourlyDistribution,
+  calculateCreatorDiversityIndex,
   toDateKey 
 } from './analytics';
 import { ViewingEvent } from '../types/scrollmeter';
@@ -205,5 +206,36 @@ test('getHourlyDistribution returns 24 bins and properly aggregates activity', (
   assert.equal(hourly[14].percentage, 50);
   assert.equal(hourly[20].percentage, 50);
 });
+
+test('calculateCreatorDiversityIndex properly computes diversity score and dominant creator', () => {
+  // Scenario 1: Deep binge watching (single creator)
+  const bingeEvents: ViewingEvent[] = [
+    createViewingEvent({ platform: 'youtube', contentId: 'b1', creatorName: 'MrBeast', startedAt: Date.now() }),
+    createViewingEvent({ platform: 'youtube', contentId: 'b2', creatorName: 'MrBeast', startedAt: Date.now() }),
+    createViewingEvent({ platform: 'youtube', contentId: 'b3', creatorName: 'MrBeast', startedAt: Date.now() }),
+    createViewingEvent({ platform: 'youtube', contentId: 'b4', creatorName: 'MrBeast', startedAt: Date.now() }),
+  ];
+
+  const bingeMetrics = calculateCreatorDiversityIndex(bingeEvents);
+  assert.equal(bingeMetrics.totalCreators, 1);
+  assert.equal(bingeMetrics.dominantCreator, 'MrBeast');
+  assert.equal(bingeMetrics.dominantCreatorShare, 100);
+  assert.equal(bingeMetrics.score, 0);
+  assert.equal(bingeMetrics.assessment, 'Low (Deep binge-watching)');
+
+  // Scenario 2: Broad discovery (diverse creators)
+  const diverseEvents: ViewingEvent[] = [
+    createViewingEvent({ platform: 'youtube', contentId: 'd1', creatorName: 'Creator 1', startedAt: Date.now() }),
+    createViewingEvent({ platform: 'instagram', contentId: 'd2', creatorName: 'Creator 2', startedAt: Date.now() }),
+    createViewingEvent({ platform: 'tiktok', contentId: 'd3', creatorName: 'Creator 3', startedAt: Date.now() }),
+    createViewingEvent({ platform: 'facebook', contentId: 'd4', creatorName: 'Creator 4', startedAt: Date.now() }),
+  ];
+
+  const diverseMetrics = calculateCreatorDiversityIndex(diverseEvents);
+  assert.equal(diverseMetrics.totalCreators, 4);
+  assert.equal(diverseMetrics.score, 75);
+  assert.equal(diverseMetrics.assessment, 'High (Broad discovery)');
+});
+
 
 

@@ -8,7 +8,8 @@ import {
   PlatformTimeBreakdown,
   WellbeingMilestone,
   WellbeingStreakSummary,
-  HourlyActivityPoint
+  HourlyActivityPoint,
+  DiversityMetrics
 } from '../types/scrollmeter';
 
 /**
@@ -635,5 +636,61 @@ export function getHourlyDistribution(events: ViewingEvent[]): HourlyActivityPoi
     };
   });
 }
+
+/**
+ * Computes creator diversity index measuring content breadth vs binge-watching
+ */
+export function calculateCreatorDiversityIndex(events: ViewingEvent[]): DiversityMetrics {
+  if (events.length === 0) {
+    return {
+      score: 100,
+      totalCreators: 0,
+      dominantCreator: null,
+      dominantCreatorShare: 0,
+      assessment: 'High (Broad discovery)',
+    };
+  }
+
+  const creatorMap = new Map<string, number>();
+  for (const e of events) {
+    const name = e.creatorName || 'Unknown';
+    creatorMap.set(name, (creatorMap.get(name) || 0) + 1);
+  }
+
+  const total = events.length;
+  let dominantCreator: string | null = null;
+  let maxCount = 0;
+  let sumSquaredShares = 0;
+
+  for (const [name, count] of creatorMap.entries()) {
+    if (count > maxCount) {
+      maxCount = count;
+      dominantCreator = name;
+    }
+    const share = count / total;
+    sumSquaredShares += share * share;
+  }
+
+  // Simpson's Index of Diversity (1 - D): 1 = infinite diversity, 0 = no diversity
+  // Normalize to 0 - 100 scale
+  const rawScore = Math.max(0, Math.min(100, Math.round((1 - sumSquaredShares) * 100)));
+  const dominantShare = Number(((maxCount / total) * 100).toFixed(1));
+
+  let assessment: DiversityMetrics['assessment'] = 'Moderate (Balanced mix)';
+  if (rawScore >= 75) {
+    assessment = 'High (Broad discovery)';
+  } else if (rawScore < 45) {
+    assessment = 'Low (Deep binge-watching)';
+  }
+
+  return {
+    score: rawScore,
+    totalCreators: creatorMap.size,
+    dominantCreator,
+    dominantCreatorShare: dominantShare,
+    assessment,
+  };
+}
+
 
 

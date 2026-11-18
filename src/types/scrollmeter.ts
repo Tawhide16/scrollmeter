@@ -147,5 +147,14 @@ export interface HourlyActivityPoint {
   percentage: number;
 }
 
+export interface DiversityMetrics {
+  score: number; // 0 - 100
+  totalCreators: number;
+  dominantCreator: string | null;
+  dominantCreatorShare: number; // percentage
+  assessment: 'High (Broad discovery)' | 'Moderate (Balanced mix)' | 'Low (Deep binge-watching)';
+}
+
+
 
 
