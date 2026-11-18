@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { eventsToCsv, generateMarkdownReport } from './export-helpers';
+import { eventsToCsv, generateMarkdownReport, filterEventsByDateRange } from './export-helpers';
 import { ViewingEvent, DailySummary } from '../types/scrollmeter';
 
 test('eventsToCsv formats events properly with valid CSV headers and escaped values', () => {
@@ -70,3 +70,49 @@ test('generateMarkdownReport produces formatted Markdown tables and summaries', 
   assert.ok(md.includes('| YouTube | 1 |'));
   assert.ok(md.includes('Zero data leaves your device'));
 });
+
+test('filterEventsByDateRange accurately filters events by date range cutoff', () => {
+  const refDate = new Date('2026-11-18T12:00:00Z');
+  const now = refDate.getTime();
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  const events: ViewingEvent[] = [
+    {
+      eventId: 'evt-today',
+      platform: 'youtube',
+      contentType: 'short',
+      contentId: 'yt-1',
+      creatorName: 'A',
+      watchSeconds: 10,
+      startedAt: now - 1 * dayMs,
+      detectionConfidence: 'high',
+    },
+    {
+      eventId: 'evt-10d',
+      platform: 'instagram',
+      contentType: 'reel',
+      contentId: 'ig-1',
+      creatorName: 'B',
+      watchSeconds: 20,
+      startedAt: now - 10 * dayMs,
+      detectionConfidence: 'high',
+    },
+    {
+      eventId: 'evt-40d',
+      platform: 'tiktok',
+      contentType: 'video',
+      contentId: 'tt-1',
+      creatorName: 'C',
+      watchSeconds: 30,
+      startedAt: now - 40 * dayMs,
+      detectionConfidence: 'high',
+    },
+  ];
+
+  assert.equal(filterEventsByDateRange(events, 'all', refDate).length, 3);
+  assert.equal(filterEventsByDateRange(events, '7d', refDate).length, 1);
+  assert.equal(filterEventsByDateRange(events, '30d', refDate).length, 2);
+  assert.equal(filterEventsByDateRange(events, '90d', refDate).length, 3);
+});
+
+

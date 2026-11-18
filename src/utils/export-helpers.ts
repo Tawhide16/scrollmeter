@@ -110,3 +110,18 @@ export function triggerFileDownload(
   document.body.removeChild(anchor);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Filters viewing events by a predefined date range
+ */
+export function filterEventsByDateRange(
+  events: ViewingEvent[],
+  range: 'all' | '7d' | '30d' | '90d',
+  refDate: Date = new Date()
+): ViewingEvent[] {
+  if (range === 'all') return events;
+  const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
+  const cutoff = refDate.getTime() - days * 24 * 60 * 60 * 1000;
+  return events.filter((e) => e.startedAt >= cutoff);
+}
+
