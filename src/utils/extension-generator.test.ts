@@ -20,6 +20,9 @@ test('manifest.json is present at root and contains valid Manifest V3 structure'
   assert.ok(parsed.host_permissions.some((p: string) => p.includes('tiktok.com')));
   assert.ok(parsed.host_permissions.some((p: string) => p.includes('facebook.com')));
   assert.equal(parsed.action.default_popup, 'popup/popup.html');
+  assert.ok(parsed.commands);
+  assert.equal(parsed.commands._execute_action.suggested_key.default, 'Alt+Shift+S');
+  assert.equal(parsed.commands['toggle-tracking'].suggested_key.default, 'Alt+Shift+P');
 });
 
 test('generatePngIconBase64 returns valid base64 string', () => {

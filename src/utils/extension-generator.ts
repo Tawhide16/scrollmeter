@@ -38,6 +38,22 @@ export function getExtensionSourceFiles(): ExtensionSourceFile[] {
               '128': 'icons/icon128.png',
             },
           },
+          commands: {
+            _execute_action: {
+              suggested_key: {
+                default: 'Alt+Shift+S',
+                mac: 'Alt+Shift+S',
+              },
+              description: 'Open ScrollMeter extension popup',
+            },
+            'toggle-tracking': {
+              suggested_key: {
+                default: 'Alt+Shift+P',
+                mac: 'Alt+Shift+P',
+              },
+              description: 'Toggle tracking pause on active feeds',
+            },
+          },
           content_scripts: [
             {
               matches: [
