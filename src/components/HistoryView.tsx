@@ -6,7 +6,8 @@ import {
   formatDuration, 
   toDateKey,
   getTimeframeAnalytics,
-  getHourlyDistribution 
+  getHourlyDistribution,
+  calculateSessionVelocity 
 } from '../utils/analytics';
 import { PlatformIcon } from './PlatformIcons';
 import { PlatformTabs } from './PlatformTabs';
@@ -26,7 +27,8 @@ import {
   Layers,
   ChevronRight,
   Flame,
-  PieChart
+  PieChart,
+  Zap
 } from 'lucide-react';
 
 interface HistoryViewProps {
@@ -61,6 +63,7 @@ export function HistoryView({
     platform,
     search,
   });
+  const sessionVelocity = calculateSessionVelocity(filteredEvents);
 
   // Group log events by day
   const groupedByDay: { [dateStr: string]: ViewingEvent[] } = {};
@@ -320,7 +323,24 @@ export function HistoryView({
               </div>
             </div>
 
-            <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
+            <div className="mt-2.5 pt-2 border-t border-white/5 grid grid-cols-2 gap-2 text-[11px]">
+              <div className="bg-[#111812] p-2 rounded-xl border border-white/5 flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <div>
+                  <span className="text-slate-400 block text-[10px]">Scroll Velocity</span>
+                  <span className="font-bold text-white">{sessionVelocity.reelsPerHourVelocity} reels/hr</span>
+                </div>
+              </div>
+              <div className="bg-[#111812] p-2 rounded-xl border border-white/5 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#72f534] shrink-0" />
+                <div>
+                  <span className="text-slate-400 block text-[10px]">Avg Session</span>
+                  <span className="font-bold text-white">{formatDuration(sessionVelocity.avgSessionSeconds)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
               <span>Healthy focus guideline:</span>
               <span className="text-slate-300 font-medium">&lt; 45 mins / day</span>
             </div>
