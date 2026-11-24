@@ -51,6 +51,12 @@ Modern social feeds are engineered for friction-free endless scrolling. ScrollMe
 - 🏆 **Mindful Streaks & Wellbeing Milestones**:
   - Daily progress tracking against configurable mindful thresholds.
   - Interactive achievement badges (First Step, Mindful Starter, Habit Builder, Zen Master).
+- ⚡ **Session Velocity & Hourly Doomscrolling Heatmaps**:
+  - Uninterrupted viewing session clustering with reels-per-hour velocity metrics.
+  - 24-hour consumption heatmap identifying peak doomscrolling hours.
+- ⌨️ **Custom Hotkeys & Extension Commands**:
+  - `Alt+Shift+S`: Instantly summon the extension popup.
+  - `Alt+Shift+P`: Toggle tracking pause on active feeds.
 - 🐳 **Docker & Container Ready**:
   - Production-ready multi-stage Docker build served with high-performance Nginx and Gzip compression.
 
