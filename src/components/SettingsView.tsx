@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, Platform, ViewingEvent } from '../types/scrollmeter';
 import { 
@@ -78,8 +78,22 @@ export function SettingsView({
 
   // Purge / Wipe confirmation modals
   const [showPermanentWipeConfirm, setShowPermanentWipeConfirm] = useState(false);
+  const [wipeCountdown, setWipeCountdown] = useState(3);
   const [showPlatformPurgeModal, setShowPlatformPurgeModal] = useState(false);
   const [platformToPurge, setPlatformToPurge] = useState<Platform>('tiktok');
+
+  useEffect(() => {
+    let timer: any;
+    if (showPermanentWipeConfirm) {
+      setWipeCountdown(3);
+      timer = setInterval(() => {
+        setWipeCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [showPermanentWipeConfirm]);
 
   const showFeedback = (text: string, type: 'success' | 'warn' | 'error' = 'success') => {
     setFeedbackMsg({ text, type });
@@ -917,9 +931,10 @@ export function SettingsView({
               </button>
               <button
                 onClick={handleExecutePermanentWipe}
-                className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer"
+                disabled={wipeCountdown > 0}
+                className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                Wipe Permanently
+                {wipeCountdown > 0 ? `Wait (${wipeCountdown}s)` : 'Wipe Permanently'}
               </button>
             </div>
           </div>
