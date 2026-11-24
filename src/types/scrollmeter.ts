@@ -155,6 +155,14 @@ export interface DiversityMetrics {
   assessment: 'High (Broad discovery)' | 'Moderate (Balanced mix)' | 'Low (Deep binge-watching)';
 }
 
+export interface SessionVelocityMetrics {
+  totalSessions: number;
+  avgSessionSeconds: number;
+  longestSessionSeconds: number;
+  reelsPerHourVelocity: number;
+}
+
+
 
 
 

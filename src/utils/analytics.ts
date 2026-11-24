@@ -9,7 +9,8 @@ import {
   WellbeingMilestone,
   WellbeingStreakSummary,
   HourlyActivityPoint,
-  DiversityMetrics
+  DiversityMetrics,
+  SessionVelocityMetrics
 } from '../types/scrollmeter';
 
 const dateKeyCache = new Map<number, string>();
@@ -718,6 +719,61 @@ export function calculateCreatorDiversityIndex(events: ViewingEvent[]): Diversit
     assessment,
   };
 }
+
+/**
+ * Evaluates binge-watching sessions and viewing velocity (reels/hour)
+ */
+export function calculateSessionVelocity(
+  events: ViewingEvent[],
+  sessionGapMinutes: number = 10
+): SessionVelocityMetrics {
+  if (events.length === 0) {
+    return {
+      totalSessions: 0,
+      avgSessionSeconds: 0,
+      longestSessionSeconds: 0,
+      reelsPerHourVelocity: 0,
+    };
+  }
+
+  const sorted = [...events].sort((a, b) => a.startedAt - b.startedAt);
+  const gapMs = sessionGapMinutes * 60 * 1000;
+
+  const sessionDurations: number[] = [];
+  let currentSessionSeconds = sorted[0].watchSeconds || 0;
+  let lastEventTime = sorted[0].startedAt;
+
+  for (let i = 1; i < sorted.length; i++) {
+    const ev = sorted[i];
+    const diff = ev.startedAt - lastEventTime;
+
+    if (diff <= gapMs) {
+      currentSessionSeconds += ev.watchSeconds || 0;
+    } else {
+      sessionDurations.push(currentSessionSeconds);
+      currentSessionSeconds = ev.watchSeconds || 0;
+    }
+    lastEventTime = ev.startedAt;
+  }
+  sessionDurations.push(currentSessionSeconds);
+
+  const totalSessions = sessionDurations.length;
+  const totalWatchSec = sessionDurations.reduce((acc, s) => acc + s, 0);
+  const avgSessionSeconds = Math.round(totalWatchSec / totalSessions);
+  const longestSessionSeconds = Math.max(...sessionDurations);
+
+  const totalHours = totalWatchSec / 3600;
+  const reelsPerHourVelocity =
+    totalHours > 0 ? Number((events.length / totalHours).toFixed(1)) : 0;
+
+  return {
+    totalSessions,
+    avgSessionSeconds,
+    longestSessionSeconds,
+    reelsPerHourVelocity,
+  };
+}
+
 
 
 

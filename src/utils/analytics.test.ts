@@ -11,6 +11,7 @@ import {
   calculateWellbeingStreaks,
   getHourlyDistribution,
   calculateCreatorDiversityIndex,
+  calculateSessionVelocity,
   toDateKey 
 } from './analytics';
 import { ViewingEvent } from '../types/scrollmeter';
@@ -236,6 +237,25 @@ test('calculateCreatorDiversityIndex properly computes diversity score and domin
   assert.equal(diverseMetrics.score, 75);
   assert.equal(diverseMetrics.assessment, 'High (Broad discovery)');
 });
+
+test('calculateSessionVelocity correctly computes sessions, duration, and velocity', () => {
+  const baseTime = 1700000000000;
+  const events: ViewingEvent[] = [
+    // Session 1: 3 reels back-to-back (2m apart)
+    createViewingEvent({ platform: 'youtube', contentId: 'v1', creatorName: 'A', startedAt: baseTime, watchSeconds: 60 }),
+    createViewingEvent({ platform: 'youtube', contentId: 'v2', creatorName: 'B', startedAt: baseTime + 2 * 60 * 1000, watchSeconds: 120 }),
+    createViewingEvent({ platform: 'youtube', contentId: 'v3', creatorName: 'C', startedAt: baseTime + 4 * 60 * 1000, watchSeconds: 60 }),
+    // Gap: 30 minutes later (Session 2)
+    createViewingEvent({ platform: 'tiktok', contentId: 'v4', creatorName: 'D', startedAt: baseTime + 35 * 60 * 1000, watchSeconds: 60 }),
+  ];
+
+  const metrics = calculateSessionVelocity(events, 10);
+  assert.equal(metrics.totalSessions, 2);
+  assert.equal(metrics.longestSessionSeconds, 240); // 60 + 120 + 60
+  assert.equal(metrics.avgSessionSeconds, 150); // (240 + 60) / 2
+  assert.ok(metrics.reelsPerHourVelocity > 0);
+});
+
 
 
 
