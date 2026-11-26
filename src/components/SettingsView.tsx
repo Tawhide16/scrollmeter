@@ -513,6 +513,38 @@ export function SettingsView({
                     <span>120m</span>
                   </div>
                 </div>
+
+                {/* Night-Owl Protection Guardrail */}
+                <div className="bg-[#172219] p-3.5 rounded-2xl border border-[#263728]">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-medium text-white flex items-center gap-1.5">
+                        <span>🌙 Night-Owl Protection</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        Alert and highlight late-night scrolling between 11 PM and 5 AM
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onUpdateSettings({
+                          ...settings,
+                          nightOwlProtection: !(settings.nightOwlProtection ?? true),
+                        })
+                      }
+                      className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                        settings.nightOwlProtection ?? true ? 'bg-[#72f534]' : 'bg-slate-700'
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded-full bg-black absolute top-1 transition-transform ${
+                          settings.nightOwlProtection ?? true ? 'right-1' : 'left-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* 3. In-page Floating Pill */}

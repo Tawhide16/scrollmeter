@@ -21,6 +21,7 @@ export interface UserSettings {
   enabledPlatforms: Record<Platform, boolean>;
   viewThresholdSeconds: number; // default: 2
   dailyLimitMinutes?: number; // default: 30
+  nightOwlProtection?: boolean; // default: true (11pm - 5am alert)
   dailyReportEnabled: boolean;
   dailyReportTime: string; // "21:00"
   inPageIndicatorEnabled: boolean;

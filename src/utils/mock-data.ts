@@ -10,6 +10,7 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   },
   viewThresholdSeconds: 2,
   dailyLimitMinutes: 30,
+  nightOwlProtection: true,
   dailyReportEnabled: true,
   dailyReportTime: '21:00', // 9:00 PM
   inPageIndicatorEnabled: true,
