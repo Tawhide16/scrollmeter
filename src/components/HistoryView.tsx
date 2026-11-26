@@ -30,8 +30,14 @@ import {
   Flame,
   PieChart,
   Zap,
-  ShieldAlert
+  ShieldAlert,
+  Sunrise,
+  Sun,
+  Sunset,
+  Moon
 } from 'lucide-react';
+
+type TimeOfDayFilter = 'all' | 'morning' | 'afternoon' | 'evening' | 'night';
 
 interface HistoryViewProps {
   events: ViewingEvent[];
@@ -54,6 +60,7 @@ export function HistoryView({
   const [timeframe, setTimeframe] = useState<'day' | 'week' | 'month'>('day');
   const [platform, setPlatform] = useState<Platform | 'all'>(selectedPlatformFilter);
   const [search, setSearch] = useState('');
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDayFilter>('all');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // Compute rich attention & time lost analytics for the selected timeframe
@@ -61,9 +68,19 @@ export function HistoryView({
   const hourlyActivity = getHourlyDistribution(events);
 
   // Filter events for the chronological log view
-  const filteredEvents = filterEvents(events, {
+  const baseFiltered = filterEvents(events, {
     platform,
     search,
+  });
+
+  const filteredEvents = baseFiltered.filter((ev) => {
+    if (timeOfDay === 'all') return true;
+    const h = new Date(ev.startedAt).getHours();
+    if (timeOfDay === 'morning') return h >= 6 && h < 12;
+    if (timeOfDay === 'afternoon') return h >= 12 && h < 18;
+    if (timeOfDay === 'evening') return h >= 18 && h < 23;
+    if (timeOfDay === 'night') return h >= 23 || h < 6;
+    return true;
   });
   const sessionVelocity = calculateSessionVelocity(filteredEvents);
   const burnoutRisk = calculateBurnoutRisk(filteredEvents);
@@ -600,6 +617,35 @@ export function HistoryView({
               selectedPlatform={platform}
               onSelectPlatform={setPlatform}
             />
+
+            {/* Quick Time-of-Day Filter Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-1">
+              {[
+                { id: 'all', label: 'All Day' },
+                { id: 'morning', label: 'Morning', icon: Sunrise },
+                { id: 'afternoon', label: 'Afternoon', icon: Sun },
+                { id: 'evening', label: 'Evening', icon: Sunset },
+                { id: 'night', label: 'Night', icon: Moon },
+              ].map((chip) => {
+                const IconComponent = chip.icon;
+                const active = timeOfDay === chip.id;
+                return (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    onClick={() => setTimeOfDay(chip.id as TimeOfDayFilter)}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium shrink-0 transition-colors cursor-pointer border ${
+                      active
+                        ? 'bg-[#223926] text-[#72f534] border-[#72f534]/40 shadow-sm'
+                        : 'bg-[#152017] text-slate-400 border-white/5 hover:text-white hover:bg-[#1a271c]'
+                    }`}
+                  >
+                    {IconComponent && <IconComponent className="w-3 h-3" />}
+                    <span>{chip.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Timeline List (Scrollable) */}
