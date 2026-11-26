@@ -7,7 +7,8 @@ import {
   toDateKey,
   getTimeframeAnalytics,
   getHourlyDistribution,
-  calculateSessionVelocity 
+  calculateSessionVelocity,
+  calculateBurnoutRisk 
 } from '../utils/analytics';
 import { PlatformIcon } from './PlatformIcons';
 import { PlatformTabs } from './PlatformTabs';
@@ -28,7 +29,8 @@ import {
   ChevronRight,
   Flame,
   PieChart,
-  Zap
+  Zap,
+  ShieldAlert
 } from 'lucide-react';
 
 interface HistoryViewProps {
@@ -64,6 +66,7 @@ export function HistoryView({
     search,
   });
   const sessionVelocity = calculateSessionVelocity(filteredEvents);
+  const burnoutRisk = calculateBurnoutRisk(filteredEvents);
 
   // Group log events by day
   const groupedByDay: { [dateStr: string]: ViewingEvent[] } = {};
@@ -522,6 +525,38 @@ export function HistoryView({
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#72f534]" />
               </div>
               <span>Peak (&gt;15%)</span>
+            </div>
+          </div>
+
+          {/* Card 6: Digital Burnout Risk Assessment */}
+          <div className="bg-[#172219] border border-[#263728] rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                Burnout Risk Assessment
+              </span>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                  burnoutRisk.level === 'Severe'
+                    ? 'bg-rose-950/80 text-rose-300 border-rose-800'
+                    : burnoutRisk.level === 'High'
+                    ? 'bg-orange-950/80 text-orange-300 border-orange-800'
+                    : burnoutRisk.level === 'Moderate'
+                    ? 'bg-amber-950/80 text-amber-300 border-amber-800'
+                    : 'bg-[#18231a] text-[#72f534] border-[#2b3d2d]'
+                }`}
+              >
+                {burnoutRisk.level} Risk ({burnoutRisk.score}/100)
+              </span>
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              {burnoutRisk.factors.map((f, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-xs text-slate-300 bg-[#111812] px-2.5 py-1.5 rounded-xl border border-white/5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#72f534] shrink-0" />
+                  <span className="truncate">{f}</span>
+                </div>
+              ))}
             </div>
           </div>
 
