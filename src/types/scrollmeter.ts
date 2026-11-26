@@ -162,6 +162,14 @@ export interface SessionVelocityMetrics {
   reelsPerHourVelocity: number;
 }
 
+export interface BurnoutRiskMetrics {
+  score: number; // 0 - 100
+  level: 'Low' | 'Moderate' | 'High' | 'Severe';
+  nightOwlMinutes: number;
+  factors: string[];
+}
+
+
 
 
 

@@ -10,7 +10,8 @@ import {
   WellbeingStreakSummary,
   HourlyActivityPoint,
   DiversityMetrics,
-  SessionVelocityMetrics
+  SessionVelocityMetrics,
+  BurnoutRiskMetrics
 } from '../types/scrollmeter';
 
 const dateKeyCache = new Map<number, string>();
@@ -773,6 +774,86 @@ export function calculateSessionVelocity(
     reelsPerHourVelocity,
   };
 }
+
+/**
+ * Calculates digital wellbeing burnout risk score based on night-time use, velocity, and duration
+ */
+export function calculateBurnoutRisk(events: ViewingEvent[]): BurnoutRiskMetrics {
+  if (events.length === 0) {
+    return {
+      score: 0,
+      level: 'Low',
+      nightOwlMinutes: 0,
+      factors: ['No short-form video consumption recorded.'],
+    };
+  }
+
+  let totalWatchSec = 0;
+  let nightWatchSec = 0;
+  const factors: string[] = [];
+
+  for (const e of events) {
+    const sec = e.watchSeconds || 0;
+    totalWatchSec += sec;
+    const hour = new Date(e.startedAt).getHours();
+    if (hour >= 23 || hour < 5) {
+      nightWatchSec += sec;
+    }
+  }
+
+  const totalHours = totalWatchSec / 3600;
+  const nightOwlMinutes = Math.round(nightWatchSec / 60);
+
+  let score = 0;
+
+  if (totalHours > 3) {
+    score += 40;
+    factors.push('High volume (>3 hours total watch time)');
+  } else if (totalHours > 1.5) {
+    score += 25;
+    factors.push('Moderate volume (>1.5 hours total watch time)');
+  } else {
+    score += 10;
+  }
+
+  if (nightOwlMinutes > 45) {
+    score += 40;
+    factors.push(`Significant night doomscrolling (${nightOwlMinutes}m between 11PM-5AM)`);
+  } else if (nightOwlMinutes > 15) {
+    score += 20;
+    factors.push(`Late night browsing detected (${nightOwlMinutes}m)`);
+  }
+
+  if (events.length > 50) {
+    score += 20;
+    factors.push('Excessive rapid video switching (>50 videos)');
+  } else if (events.length > 25) {
+    score += 10;
+  }
+
+  score = Math.min(100, score);
+
+  let level: BurnoutRiskMetrics['level'] = 'Low';
+  if (score >= 75) {
+    level = 'Severe';
+  } else if (score >= 50) {
+    level = 'High';
+  } else if (score >= 25) {
+    level = 'Moderate';
+  }
+
+  if (factors.length === 0) {
+    factors.push('Healthy, controlled viewing patterns.');
+  }
+
+  return {
+    score,
+    level,
+    nightOwlMinutes,
+    factors,
+  };
+}
+
 
 
 

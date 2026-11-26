@@ -12,6 +12,7 @@ import {
   getHourlyDistribution,
   calculateCreatorDiversityIndex,
   calculateSessionVelocity,
+  calculateBurnoutRisk,
   toDateKey 
 } from './analytics';
 import { ViewingEvent } from '../types/scrollmeter';
@@ -255,6 +256,30 @@ test('calculateSessionVelocity correctly computes sessions, duration, and veloci
   assert.equal(metrics.avgSessionSeconds, 150); // (240 + 60) / 2
   assert.ok(metrics.reelsPerHourVelocity > 0);
 });
+
+test('calculateBurnoutRisk evaluates late-night scrolling and classifies severity', () => {
+  const dNight = new Date();
+  dNight.setHours(2, 0, 0, 0); // 2:00 AM
+  const nightTime = dNight.getTime();
+
+  // Create severe night-time doomscrolling profile
+  const nightEvents: ViewingEvent[] = Array.from({ length: 30 }, (_, i) =>
+    createViewingEvent({
+      platform: 'tiktok',
+      contentId: `night_${i}`,
+      creatorName: 'CreatorX',
+      startedAt: nightTime + i * 2 * 60 * 1000,
+      watchSeconds: 120, // 30 * 120s = 60 minutes
+    })
+  );
+
+  const risk = calculateBurnoutRisk(nightEvents);
+  assert.ok(risk.nightOwlMinutes >= 50);
+  assert.ok(risk.score >= 50);
+  assert.ok(risk.level === 'High' || risk.level === 'Severe');
+  assert.ok(risk.factors.length > 0);
+});
+
 
 
 
