@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { eventsToCsv, generateMarkdownReport, filterEventsByDateRange } from './export-helpers';
+import { eventsToCsv, generateMarkdownReport, filterEventsByDateRange, validateImportPayload } from './export-helpers';
 import { ViewingEvent, DailySummary } from '../types/scrollmeter';
 
 test('eventsToCsv formats events properly with valid CSV headers and escaped values', () => {
@@ -114,5 +114,59 @@ test('filterEventsByDateRange accurately filters events by date range cutoff', (
   assert.equal(filterEventsByDateRange(events, '30d', refDate).length, 2);
   assert.equal(filterEventsByDateRange(events, '90d', refDate).length, 3);
 });
+
+test('validateImportPayload validates valid JSON backup and rejects invalid schemas', () => {
+  // 1. Valid plaintext payload array
+  const validArray = [
+    { platform: 'youtube', startedAt: 1700000000000, watchSeconds: 30, creatorName: 'Test' },
+    { platform: 'instagram', startedAt: 1700000050000, watchSeconds: 60, creatorName: 'Test2' },
+  ];
+  const resArray = validateImportPayload(validArray);
+  assert.equal(resArray.isValid, true);
+  assert.equal(resArray.count, 2);
+  assert.equal(resArray.data?.length, 2);
+
+  // 2. Valid payload object format with events array
+  const validObject = {
+    privacyMode: 'local-first',
+    events: validArray,
+  };
+  const resObj = validateImportPayload(validObject);
+  assert.equal(resObj.isValid, true);
+  assert.equal(resObj.count, 2);
+
+  // 3. Valid encrypted payload format
+  const validEncrypted = {
+    isEncrypted: true,
+    totalRecords: 15,
+    encryptedData: {
+      ciphertext: 'abc==',
+      iv: 'def==',
+      salt: 'ghi==',
+    },
+  };
+  const resEnc = validateImportPayload(validEncrypted);
+  assert.equal(resEnc.isValid, true);
+  assert.equal(resEnc.isEncrypted, true);
+  assert.equal(resEnc.count, 15);
+
+  // 4. Invalid non-object
+  assert.equal(validateImportPayload(null).isValid, false);
+  assert.equal(validateImportPayload('random string').isValid, false);
+
+  // 5. Missing events or corrupted platform
+  const invalidPlatform = [{ platform: 'unknown-platform', startedAt: 123456 }];
+  const resInvalidPlatform = validateImportPayload(invalidPlatform);
+  assert.equal(resInvalidPlatform.isValid, false);
+  assert.ok(resInvalidPlatform.error?.includes('Invalid platform'));
+
+  // 6. Corrupted encrypted payload missing salt
+  const corruptedEnc = {
+    isEncrypted: true,
+    encryptedData: { ciphertext: 'abc==' },
+  };
+  assert.equal(validateImportPayload(corruptedEnc).isValid, false);
+});
+
 
 

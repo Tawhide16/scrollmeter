@@ -125,3 +125,84 @@ export function filterEventsByDateRange(
   return events.filter((e) => e.startedAt >= cutoff);
 }
 
+export interface ImportValidationResult {
+  isValid: boolean;
+  isEncrypted?: boolean;
+  error?: string;
+  count: number;
+  data?: ViewingEvent[];
+}
+
+const ALLOWED_PLATFORMS = new Set(['youtube', 'instagram', 'tiktok', 'facebook']);
+
+/**
+ * Validates the schema and integrity of an imported JSON backup payload
+ */
+export function validateImportPayload(raw: unknown): ImportValidationResult {
+  if (!raw || typeof raw !== 'object') {
+    return { isValid: false, error: 'Invalid backup format: payload must be a JSON object or array', count: 0 };
+  }
+
+  // Handle Encrypted Payload format
+  const record = raw as Record<string, unknown>;
+  if (record.isEncrypted) {
+    const enc = record.encryptedData as Record<string, unknown> | undefined;
+    if (!enc || typeof enc !== 'object' || !enc.ciphertext || !enc.iv || !enc.salt) {
+      return { isValid: false, error: 'Encrypted backup is missing cryptographic components (ciphertext, iv, or salt)', count: 0 };
+    }
+    const total = typeof record.totalRecords === 'number' ? record.totalRecords : 0;
+    return { isValid: true, isEncrypted: true, count: total };
+  }
+
+  // Determine candidate array
+  let list: unknown[] | null = null;
+  if (Array.isArray(raw)) {
+    list = raw;
+  } else if (Array.isArray(record.events)) {
+    list = record.events;
+  }
+
+  if (!list) {
+    return { isValid: false, error: 'Invalid backup: missing "events" array in payload', count: 0 };
+  }
+
+  if (list.length === 0) {
+    return { isValid: true, count: 0, data: [] };
+  }
+
+  const validEvents: ViewingEvent[] = [];
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    if (!item || typeof item !== 'object') {
+      return { isValid: false, error: `Corrupted record at index ${i}: not an object`, count: 0 };
+    }
+    const e = item as Record<string, unknown>;
+    if (!e.platform || typeof e.platform !== 'string' || !ALLOWED_PLATFORMS.has(e.platform.toLowerCase())) {
+      return { isValid: false, error: `Invalid platform at record index ${i}: "${String(e.platform)}"`, count: 0 };
+    }
+    const startedAt = typeof e.startedAt === 'number' ? e.startedAt : Number(e.startedAt);
+    if (!startedAt || isNaN(startedAt)) {
+      return { isValid: false, error: `Invalid startedAt timestamp at record index ${i}`, count: 0 };
+    }
+
+    validEvents.push({
+      eventId: typeof e.eventId === 'string' ? e.eventId : `import-${Date.now()}-${i}`,
+      platform: e.platform.toLowerCase() as ViewingEvent['platform'],
+      contentType: (typeof e.contentType === 'string' ? e.contentType : 'short') as ViewingEvent['contentType'],
+      contentId: typeof e.contentId === 'string' ? e.contentId : `imported-${i}`,
+      creatorName: typeof e.creatorName === 'string' ? e.creatorName : 'Unknown',
+      watchSeconds: typeof e.watchSeconds === 'number' ? Math.max(0, e.watchSeconds) : 0,
+      startedAt,
+      detectionConfidence: e.detectionConfidence === 'high' ? 'high' : 'medium',
+      contentUrl: typeof e.contentUrl === 'string' ? e.contentUrl : undefined,
+    });
+  }
+
+  return {
+    isValid: true,
+    count: validEvents.length,
+    data: validEvents,
+  };
+}
+
+
