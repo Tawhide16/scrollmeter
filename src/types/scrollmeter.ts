@@ -170,6 +170,14 @@ export interface BurnoutRiskMetrics {
   factors: string[];
 }
 
+export interface PlatformParityRatio {
+  score: number; // 0 - 100
+  dominantPlatform: Platform | null;
+  dominantPlatformShare: number;
+  status: 'Balanced' | 'Moderate Skew' | 'Monopolized';
+}
+
+
 
 
 

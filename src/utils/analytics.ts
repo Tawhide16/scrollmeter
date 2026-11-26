@@ -11,7 +11,8 @@ import {
   HourlyActivityPoint,
   DiversityMetrics,
   SessionVelocityMetrics,
-  BurnoutRiskMetrics
+  BurnoutRiskMetrics,
+  PlatformParityRatio
 } from '../types/scrollmeter';
 
 const dateKeyCache = new Map<number, string>();
@@ -853,6 +854,73 @@ export function calculateBurnoutRisk(events: ViewingEvent[]): BurnoutRiskMetrics
     factors,
   };
 }
+
+/**
+ * Calculates platform parity ratio (how balanced viewing time is across platforms).
+ * Returns a score (0-100), dominant platform, dominant share %, and status classification.
+ */
+export function calculatePlatformParity(events: ViewingEvent[]): PlatformParityRatio {
+  if (!events || events.length === 0) {
+    return {
+      score: 100,
+      dominantPlatform: null,
+      dominantPlatformShare: 0,
+      status: 'Balanced',
+    };
+  }
+
+  const platformSeconds: Record<Platform, number> = {
+    youtube: 0,
+    instagram: 0,
+    tiktok: 0,
+    facebook: 0,
+  };
+
+  let totalSeconds = 0;
+  for (const e of events) {
+    const p = e.platform || 'youtube';
+    const s = Math.max(1, e.watchSeconds || 1);
+    platformSeconds[p] = (platformSeconds[p] || 0) + s;
+    totalSeconds += s;
+  }
+
+  if (totalSeconds === 0) {
+    return {
+      score: 100,
+      dominantPlatform: null,
+      dominantPlatformShare: 0,
+      status: 'Balanced',
+    };
+  }
+
+  let dominantPlatform: Platform = 'youtube';
+  let maxSeconds = 0;
+
+  for (const [platform, sec] of Object.entries(platformSeconds) as [Platform, number][]) {
+    if (sec > maxSeconds) {
+      maxSeconds = sec;
+      dominantPlatform = platform;
+    }
+  }
+
+  const dominantPlatformShare = Math.round((maxSeconds / totalSeconds) * 100);
+  const score = Math.max(0, Math.min(100, Math.round(100 - (Math.max(0, dominantPlatformShare - 25) / 75) * 100)));
+
+  let status: PlatformParityRatio['status'] = 'Balanced';
+  if (score < 35) {
+    status = 'Monopolized';
+  } else if (score < 75) {
+    status = 'Moderate Skew';
+  }
+
+  return {
+    score,
+    dominantPlatform,
+    dominantPlatformShare,
+    status,
+  };
+}
+
 
 
 

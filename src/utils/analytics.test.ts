@@ -13,6 +13,7 @@ import {
   calculateCreatorDiversityIndex,
   calculateSessionVelocity,
   calculateBurnoutRisk,
+  calculatePlatformParity,
   toDateKey 
 } from './analytics';
 import { ViewingEvent } from '../types/scrollmeter';
@@ -279,6 +280,38 @@ test('calculateBurnoutRisk evaluates late-night scrolling and classifies severit
   assert.ok(risk.level === 'High' || risk.level === 'Severe');
   assert.ok(risk.factors.length > 0);
 });
+
+test('calculatePlatformParity evaluates platform distribution balance', () => {
+  // Empty
+  const emptyRes = calculatePlatformParity([]);
+  assert.equal(emptyRes.score, 100);
+  assert.equal(emptyRes.status, 'Balanced');
+  assert.equal(emptyRes.dominantPlatform, null);
+
+  // Monopolized on TikTok
+  const monoEvents: ViewingEvent[] = [
+    createViewingEvent({ platform: 'tiktok', contentId: 't1', creatorName: 'C1', watchSeconds: 100 }),
+    createViewingEvent({ platform: 'tiktok', contentId: 't2', creatorName: 'C2', watchSeconds: 200 }),
+  ];
+  const monoRes = calculatePlatformParity(monoEvents);
+  assert.equal(monoRes.dominantPlatform, 'tiktok');
+  assert.equal(monoRes.dominantPlatformShare, 100);
+  assert.equal(monoRes.status, 'Monopolized');
+  assert.equal(monoRes.score, 0);
+
+  // Balanced across 4 platforms (25% each)
+  const balancedEvents: ViewingEvent[] = [
+    createViewingEvent({ platform: 'youtube', contentId: 'y1', creatorName: 'C1', watchSeconds: 100 }),
+    createViewingEvent({ platform: 'instagram', contentId: 'i1', creatorName: 'C2', watchSeconds: 100 }),
+    createViewingEvent({ platform: 'tiktok', contentId: 't1', creatorName: 'C3', watchSeconds: 100 }),
+    createViewingEvent({ platform: 'facebook', contentId: 'f1', creatorName: 'C4', watchSeconds: 100 }),
+  ];
+  const balancedRes = calculatePlatformParity(balancedEvents);
+  assert.equal(balancedRes.dominantPlatformShare, 25);
+  assert.equal(balancedRes.status, 'Balanced');
+  assert.equal(balancedRes.score, 100);
+});
+
 
 
 
