@@ -9,7 +9,7 @@ import {
   purgeDataOlderThanDays,
   purgeDataForPlatform
 } from '../utils/storage';
-import { generateMarkdownReport, triggerFileDownload } from '../utils/export-helpers';
+import { generateMarkdownReport, triggerFileDownload, validateImportPayload } from '../utils/export-helpers';
 import { buildDailySummary } from '../utils/analytics';
 import { 
   encryptData, 
@@ -161,7 +161,7 @@ export function SettingsView({
     showFeedback('Exported Markdown report successfully!');
   };
 
-  // Import JSON Backup
+  // Import JSON Backup with Schema Validation
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -170,19 +170,33 @@ export function SettingsView({
     reader.onload = async (event) => {
       try {
         const content = event.target?.result as string;
-        const parsed = JSON.parse(content);
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(content);
+        } catch {
+          showFeedback('Invalid JSON syntax: cannot parse backup file', 'error');
+          return;
+        }
+
+        const validation = validateImportPayload(parsed);
+        if (!validation.isValid) {
+          showFeedback(validation.error || 'Backup failed schema validation integrity check', 'error');
+          return;
+        }
 
         // Check if encrypted
-        if (parsed.isEncrypted && parsed.encryptedData) {
+        if (validation.isEncrypted && (parsed as Record<string, unknown>).encryptedData) {
           const pass = window.prompt('This backup is encrypted with AES-GCM 256-bit. Please enter your passphrase:');
           if (!pass) return;
           try {
-            const decryptedEvents = await decryptData<ViewingEvent[]>(parsed.encryptedData, pass);
-            if (decryptedEvents && decryptedEvents.length > 0) {
-              onImportEvents(decryptedEvents);
-              showFeedback(`Decrypted & imported ${decryptedEvents.length} events!`);
+            const encData = (parsed as { encryptedData: EncryptedPayload }).encryptedData;
+            const decryptedEvents = await decryptData<ViewingEvent[]>(encData, pass);
+            const decryptedValidation = validateImportPayload(decryptedEvents);
+            if (decryptedValidation.isValid && decryptedValidation.data && decryptedValidation.data.length > 0) {
+              onImportEvents(decryptedValidation.data);
+              showFeedback(`Decrypted & verified ${decryptedValidation.count} events!`);
             } else {
-              showFeedback('No events found in decrypted file', 'warn');
+              showFeedback(decryptedValidation.error || 'No valid events found in decrypted file', 'warn');
             }
           } catch {
             showFeedback('Incorrect passphrase or corrupted encrypted backup', 'error');
@@ -190,12 +204,11 @@ export function SettingsView({
           return;
         }
 
-        const imported = importEventsFromJson(content);
-        if (imported && imported.length > 0) {
-          onImportEvents(imported);
-          showFeedback(`Imported ${imported.length} events successfully!`);
+        if (validation.data && validation.data.length > 0) {
+          onImportEvents(validation.data);
+          showFeedback(`Verified schema & imported ${validation.count} events!`);
         } else {
-          showFeedback('Failed to parse valid events from JSON file.', 'warn');
+          showFeedback('No events found in backup file.', 'warn');
         }
       } catch (err) {
         showFeedback('Corrupted or invalid JSON backup file.', 'error');
