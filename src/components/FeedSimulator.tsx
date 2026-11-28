@@ -14,7 +14,9 @@ import {
   CheckCircle2, 
   Sparkles,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  PlusCircle,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -187,9 +189,54 @@ export function FeedSimulator({
   const [autoScroll, setAutoScroll] = useState(false);
   const [hasRecordedCurrent, setHasRecordedCurrent] = useState(false);
   const [inPageDismissed, setInPageDismissed] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [customTitle, setCustomTitle] = useState('');
+  const [customCreator, setCustomCreator] = useState('');
+  const [customDuration, setCustomDuration] = useState('30');
+  const [customVideos, setCustomVideos] = useState<Record<Platform, SimulatedShort[]>>({
+    youtube: [],
+    instagram: [],
+    tiktok: [],
+    facebook: [],
+  });
 
-  const playlist = SIMULATED_VIDEOS[currentPlatform] || SIMULATED_VIDEOS.youtube;
-  const currentShort = playlist[videoIndex % playlist.length];
+  const basePlaylist = SIMULATED_VIDEOS[currentPlatform] || SIMULATED_VIDEOS.youtube;
+  const platformCustom = customVideos[currentPlatform] || [];
+  const playlist = [...basePlaylist, ...platformCustom];
+  const currentShort = playlist[videoIndex % playlist.length] || basePlaylist[0];
+
+  const handleAddCustomReel = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customTitle.trim() || !customCreator.trim()) return;
+
+    const newReel: SimulatedShort = {
+      id: `custom_${Date.now()}`,
+      title: customTitle.trim(),
+      creator: customCreator.trim(),
+      creatorHandle: `@${customCreator.trim().toLowerCase().replace(/\s+/g, '')}`,
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face',
+      views: '1.2K',
+      likes: '450',
+      comments: '32',
+      bgGradient: 'from-purple-900 via-neutral-900 to-black',
+      videoBadge: `${currentPlatform.charAt(0).toUpperCase() + currentPlatform.slice(1)} Reel`,
+      durationSeconds: Math.max(5, parseInt(customDuration, 10) || 30),
+      previewImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&h=900&fit=crop',
+    };
+
+    setCustomVideos((prev) => ({
+      ...prev,
+      [currentPlatform]: [...(prev[currentPlatform] || []), newReel],
+    }));
+
+    setVideoIndex(playlist.length);
+    setPlaybackSeconds(0);
+    setHasRecordedCurrent(false);
+    setShowAddModal(false);
+    setCustomTitle('');
+    setCustomCreator('');
+    setCustomDuration('30');
+  };
 
   // Timer loop simulating playback and checking threshold rule (PDF Section 4)
   useEffect(() => {
@@ -506,10 +553,95 @@ export function FeedSimulator({
           Auto-scroll: {autoScroll ? 'ON' : 'OFF'}
         </button>
 
+        {/* Custom Reel Creator Button */}
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="px-2.5 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/60 text-[#72f534] font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          title="Inject custom simulated reel"
+        >
+          <PlusCircle className="w-3.5 h-3.5" />
+          <span>Add Reel</span>
+        </button>
+
         <span className="text-[11px] text-slate-400 pl-1">
           {videoIndex + 1}/{playlist.length}
         </span>
       </div>
+
+      {/* Custom Simulated Reel Creator Modal */}
+      {showAddModal && (
+        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-[320px] bg-[#121a14] border border-[#263728] rounded-2xl p-4 shadow-2xl text-white">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-1.5 font-bold text-sm text-slate-100">
+                <PlusCircle className="w-4 h-4 text-[#72f534]" />
+                <span>Add Simulated Video</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddCustomReel} className="space-y-3 pt-3 text-xs">
+              <div>
+                <label className="block text-slate-400 font-medium mb-1">Creator Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Marques Brownlee"
+                  value={customCreator}
+                  onChange={(e) => setCustomCreator(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-[#172219] border border-[#263728] focus:border-[#72f534] rounded-xl text-white placeholder-slate-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-medium mb-1">Video Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Next-Gen Tech Unboxing"
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-[#172219] border border-[#263728] focus:border-[#72f534] rounded-xl text-white placeholder-slate-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-medium mb-1">Duration (seconds)</label>
+                <input
+                  type="number"
+                  min="5"
+                  max="300"
+                  value={customDuration}
+                  onChange={(e) => setCustomDuration(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-[#172219] border border-[#263728] focus:border-[#72f534] rounded-xl text-white focus:outline-none font-mono"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 font-medium cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-1.5 rounded-xl bg-[#72f534] hover:bg-[#86ff4d] text-black font-semibold cursor-pointer shadow-md"
+                >
+                  Add to Feed
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
