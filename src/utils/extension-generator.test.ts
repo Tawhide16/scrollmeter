@@ -30,3 +30,13 @@ test('generatePngIconBase64 returns valid base64 string', () => {
   assert.ok(typeof b64 === 'string');
   assert.ok(b64.length > 0);
 });
+
+test('service-worker.js includes midnight alarm reset and alarms onAlarm listener', () => {
+  const files = getExtensionSourceFiles();
+  const sw = files.find((f) => f.path === 'background/service-worker.js');
+  assert.ok(sw, 'background/service-worker.js must exist');
+  assert.ok(sw.code.includes('chrome.alarms.onAlarm.addListener'));
+  assert.ok(sw.code.includes('midnight-badge-reset'));
+  assert.ok(sw.code.includes('scheduleMidnightResetAlarm'));
+});
+

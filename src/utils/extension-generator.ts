@@ -110,6 +110,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   // Update extension action badge on toolbar
   updateToolbarBadge();
   scheduleDailyReport('21:00');
+  scheduleMidnightResetAlarm();
 });
 
 // Seed data spanning the past 7 days to give tall, beautiful weekly trend bars matching mockup
@@ -350,6 +351,40 @@ async function scheduleDailyReport(timeString = '21:00') {
     });
   } catch (err) {}
 }
+
+async function scheduleMidnightResetAlarm() {
+  try {
+    await chrome.alarms.clear('midnight-badge-reset');
+    const midnight = new Date();
+    midnight.setHours(24, 0, 5, 0);
+    chrome.alarms.create('midnight-badge-reset', {
+      when: midnight.getTime(),
+      periodInMinutes: 24 * 60
+    });
+  } catch (err) {}
+}
+
+// Background alarm listener for midnight badge reset & daily wellbeing notifications
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'midnight-badge-reset') {
+    await updateToolbarBadge(0);
+  } else if (alarm.name === 'daily-summary') {
+    const { scrollmeter_settings } = await chrome.storage.local.get('scrollmeter_settings');
+    if (scrollmeter_settings && scrollmeter_settings.dailyReportEnabled) {
+      const stats = await getTodayTotals();
+      if (chrome.notifications && chrome.notifications.create) {
+        chrome.notifications.create('daily-report-notif', {
+          type: 'basic',
+          iconUrl: 'icons/icon128.png',
+          title: 'ScrollMeter Daily Wellbeing Report',
+          message: 'Today you watched ' + stats.total + ' short videos (~' + Math.round(stats.totalSeconds / 60) + ' mins).',
+          priority: 1
+        });
+      }
+    }
+  }
+});
+
 `,
     },
     {
