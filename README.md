@@ -54,6 +54,18 @@ Modern social feeds are engineered for friction-free endless scrolling. ScrollMe
 - ⚡ **Session Velocity & Hourly Doomscrolling Heatmaps**:
   - Uninterrupted viewing session clustering with reels-per-hour velocity metrics.
   - 24-hour consumption heatmap identifying peak doomscrolling hours.
+- 🛡️ **Digital Wellbeing Burnout Risk Index & Night-Owl Mode**:
+  - Automated burnout risk assessment factoring late-night doomscrolling (11PM-5AM) and rapid video switching.
+  - Night-Owl guardrail toggle in Settings flagging late-night binge viewing patterns.
+- ⚖️ **Platform Consumption Parity & Time-of-Day Filtering**:
+  - Platform parity score calculating healthy balance versus monopolized platform usage.
+  - Quick time-of-day filter chips (Morning, Afternoon, Evening, Night) in chronological history log.
+- 🔒 **Import Schema Integrity Validation**:
+  - Comprehensive JSON schema verification for plaintext and AES-GCM encrypted backup restoration.
+- 🎬 **Custom Simulated Reel Creator**:
+  - Inline reel injector in FeedSimulator to test custom creators, titles, and durations on the fly.
+- ⏰ **Background Alarm & Midnight Badge Scheduler**:
+  - `chrome.alarms` scheduler in Manifest V3 service-worker handling midnight badge resets and daily notifications.
 - ⌨️ **Custom Hotkeys & Extension Commands**:
   - `Alt+Shift+S`: Instantly summon the extension popup.
   - `Alt+Shift+P`: Toggle tracking pause on active feeds.
